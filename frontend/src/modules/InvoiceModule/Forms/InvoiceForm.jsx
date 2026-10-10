@@ -240,22 +240,20 @@ function LoadInvoiceForm({ subTotal = 0, current = null }) {
           <Col className="gutter-row" span={4} offset={15}>
             <Form.Item
               name="taxRate"
+              initialValue={0}
               rules={[
                 {
                   required: true,
                 },
               ]}
             >
-              <Select
-                value={taxRate}
-                onChange={handelTaxChange}
-                entity={'taxes'}
-                outputValue={'taxValue'}
-                displayLabels={['taxName']}
-                withRedirect={true}
-                urlToRedirect="/taxes"
-                redirectLabel={translate('Add New Tax')}
-                placeholder={translate('Select Tax Value')}
+              <InputNumber
+                onChange={(value) => handelTaxChange(value || 0)}
+                min={0}
+                max={100}
+                addonAfter="%"
+                placeholder={translate('Tax')}
+                style={{ width: '100%' }}
               />
             </Form.Item>
           </Col>

@@ -18,6 +18,10 @@ mongoose.connect(process.env.DATABASE);
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+mongoose.connection.on('connected', () => {
+  console.log(`✅ MongoDB connected → : ${mongoose.connection.host}/${mongoose.connection.name}`);
+});
+
 mongoose.connection.on('error', (error) => {
   console.log(
     `1. 🔥 Common Error caused issue → : check your .env file first and add your mongodb url`
