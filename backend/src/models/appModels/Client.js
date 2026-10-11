@@ -30,6 +30,8 @@ const schema = new mongoose.Schema({
   },
 });
 
+schema.index({ removed: 1, enabled: 1, created: -1 });
+
 schema.plugin(require('mongoose-autopopulate'));
 
 module.exports = mongoose.model('Client', schema);

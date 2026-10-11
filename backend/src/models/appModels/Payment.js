@@ -53,5 +53,9 @@ const paymentSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+paymentSchema.index({ removed: 1, created: -1 });
+paymentSchema.index({ invoice: 1 });
+paymentSchema.index({ client: 1 });
+
 paymentSchema.plugin(require('mongoose-autopopulate'));
 module.exports = mongoose.model('Payment', paymentSchema);
