@@ -4,6 +4,7 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 
 const shortid = require('shortid');
+const { clearAuthCache } = require('@/cache');
 
 const resetPassword = async (req, res, { userModel }) => {
   const UserPassword = mongoose.model(userModel + 'Password');
@@ -79,6 +80,7 @@ const resetPassword = async (req, res, { userModel }) => {
       new: true,
     }
   ).exec();
+  clearAuthCache(userId);
 
   if (
     resetToken === databasePassword.resetToken &&

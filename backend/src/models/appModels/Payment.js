@@ -6,7 +6,12 @@ const paymentSchema = new mongoose.Schema({
     default: false,
   },
 
-  createdBy: { type: mongoose.Schema.ObjectId, ref: 'Admin', autopopulate: true, required: true },
+  createdBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Admin',
+    autopopulate: { select: 'name surname' },
+    required: true,
+  },
   number: {
     type: Number,
     required: true,
@@ -14,14 +19,14 @@ const paymentSchema = new mongoose.Schema({
   client: {
     type: mongoose.Schema.ObjectId,
     ref: 'Client',
-    autopopulate: true,
+    autopopulate: { select: 'name email' },
     required: true,
   },
   invoice: {
     type: mongoose.Schema.ObjectId,
     ref: 'Invoice',
     required: true,
-    autopopulate: true,
+    autopopulate: { maxDepth: 1 },
   },
   date: {
     type: Date,

@@ -39,4 +39,13 @@ const settingSchema = new mongoose.Schema({
 
 settingSchema.index({ settingKey: 1 }, { unique: true });
 
+// keep the cached settings in sync with every write that goes through the model
+const { clearSettingsCache } = require('../../cache');
+
+settingSchema.post('save', clearSettingsCache);
+settingSchema.post(
+  ['findOneAndUpdate', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany'],
+  clearSettingsCache
+);
+
 module.exports = mongoose.model('Setting', settingSchema);

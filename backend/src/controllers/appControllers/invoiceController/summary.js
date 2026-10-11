@@ -3,14 +3,10 @@ const moment = require('moment');
 
 const Model = mongoose.model('Invoice');
 
-const { loadSettings } = require('@/middlewares/settings');
-
 const summary = async (req, res) => {
   let defaultType = 'month';
 
   const { type } = req.query;
-
-  const settings = await loadSettings();
 
   if (type) {
     if (['week', 'month', 'year'].includes(type)) {
