@@ -19,7 +19,7 @@ const paymentSchema = new mongoose.Schema({
   client: {
     type: mongoose.Schema.ObjectId,
     ref: 'Client',
-    autopopulate: { select: 'name email' },
+    autopopulate: { select: 'name email phone address country' },
     required: true,
   },
   invoice: {

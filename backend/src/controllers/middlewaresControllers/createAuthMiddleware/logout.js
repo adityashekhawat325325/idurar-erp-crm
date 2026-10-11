@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { clearAuthCache } = require('@/cache');
 
 const logout = async (req, res, { userModel }) => {
   const UserPassword = mongoose.model(userModel + 'Password');
@@ -24,6 +25,8 @@ const logout = async (req, res, { userModel }) => {
         new: true,
       }
     ).exec();
+
+  clearAuthCache(req.admin._id);
 
   return res.json({
     success: true,

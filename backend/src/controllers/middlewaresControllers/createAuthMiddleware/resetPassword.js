@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 
 const shortid = require('shortid');
 const { clearAuthCache } = require('@/cache');
+const { MAX_SESSIONS } = require('./constants');
 
 const resetPassword = async (req, res, { userModel }) => {
   const UserPassword = mongoose.model(userModel + 'Password');
@@ -69,7 +70,7 @@ const resetPassword = async (req, res, { userModel }) => {
   await UserPassword.findOneAndUpdate(
     { user: userId },
     {
-      $push: { loggedSessions: token },
+      $push: { loggedSessions: { $each: [token], $slice: -MAX_SESSIONS } },
       password: hashedPassword,
       salt: salt,
       emailToken: emailToken,

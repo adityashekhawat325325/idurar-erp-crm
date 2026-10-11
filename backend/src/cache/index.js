@@ -1,7 +1,7 @@
 const NodeCache = require('node-cache');
 
 // In-process caches. With more than one server instance these should move to a shared store (e.g. Redis).
-const settingsCache = new NodeCache({ stdTTL: 5 * 60 * 1000, useClones: false });
+const settingsCache = new NodeCache({ stdTTL: 5 * 60, useClones: false });
 const authCache = new NodeCache({ stdTTL: 60, useClones: false });
 
 const SETTINGS_KEY = 'allSettings';
