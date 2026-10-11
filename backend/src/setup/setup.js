@@ -11,11 +11,17 @@ async function setupApp() {
   try {
     const Admin = require('../models/coreModels/Admin');
     const AdminPassword = require('../models/coreModels/AdminPassword');
+
+    if (await Admin.exists({})) {
+      console.log('⚠️  Setup already done. To start over, run\n\n\t npm run reset\n\n');
+      process.exit();
+    }
+
     const newAdminPassword = new AdminPassword();
 
     const salt = uniqueId();
 
-    const passwordHash = newAdminPassword.generateHash(salt, 'admin123');
+    const passwordHash = newAdminPassword.generateHash(salt, 'Qwerty123@');
 
     const demoAdmin = {
       email: 'admin@admin.com',
@@ -50,21 +56,6 @@ async function setupApp() {
     await Setting.insertMany(settingFiles);
 
     console.log('👍 Settings created : Done!');
-
-    const PaymentMode = require('../models/appModels/PaymentMode');
-    const Taxes = require('../models/appModels/Taxes');
-
-    await Taxes.insertMany([{ taxName: 'Tax 0%', taxValue: '0', isDefault: true }]);
-    console.log('👍 Taxes created : Done!');
-
-    await PaymentMode.insertMany([
-      {
-        name: 'Default Payment',
-        description: 'Default Payment Mode (Cash , Wire Transfer)',
-        isDefault: true,
-      },
-    ]);
-    console.log('👍 PaymentMode created : Done!');
 
     console.log('🥳 Setup completed :Success!');
     process.exit();

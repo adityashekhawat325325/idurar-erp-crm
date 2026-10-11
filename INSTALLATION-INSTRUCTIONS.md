@@ -1,5 +1,16 @@
 ## Getting started
 
+### Prerequisites
+
+- **Node.js 20** (20.9.0 recommended) and **npm 10**. The backend refuses to start on Node versions below 20. Check with:
+
+```bash
+node -v
+```
+
+- **Git**
+- A **MongoDB** database: either a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster or MongoDB running locally (or in Docker)
+
 #### Step 1: Clone the repository
 
 ```bash
@@ -10,106 +21,196 @@ git clone https://github.com/idurar/idurar-erp-crm.git
 cd idurar-erp-crm
 ```
 
-#### Step 2: Create Your MongoDB Account and Database Cluster
+#### Step 2: Get a MongoDB connection string
 
-- Create your own MongoDB account by visiting the MongoDB website and signing up for a new account.
+**Option A – MongoDB Atlas (cloud)**
 
-- Create a new database or cluster by following the instructions provided in the MongoDB documentation. Remember to note down the "Connect to your application URI" for the database, as you will need it later. Also, make sure to change `<password>` with your own password
+- Create a MongoDB account on the MongoDB website.
 
-- add your current IP address to the MongoDB database's IP whitelist to allow connections (this is needed whenever your ip changes)
+- Create a new cluster by following the MongoDB documentation, then copy the "Connect to your application" URI. Replace `<password>` in it with your database user's password.
 
-#### Step 3: Edit the Environment File
+- Add your current IP address to the cluster's IP access list so the backend can connect (repeat this whenever your IP changes).
 
-- Check a file named .env in the /backend directory.
+**Option B – Local MongoDB**
 
-  This file will store environment variables for the project to run.
+If MongoDB is installed locally, or you run it with Docker:
 
-#### Step 4: Update MongoDB URI
+```bash
+docker run -d --name idurar-mongo -p 27017:27017 mongo
+```
 
-In the .env file, find the line that reads:
+your connection string is:
 
-`DATABASE="your-mongodb-uri"`
+`mongodb://localhost:27017/idurar`
 
-Replace "your-mongodb-uri" with the actual URI of your MongoDB database.
+#### Step 3: Create the backend environment file
 
-#### Step 5: Install Backend Dependencies
+The backend's `.env` file is not committed to the repository. Create it from the provided example:
 
-In your terminal, navigate to the /backend directory
+```bash
+cp backend/.env.example backend/.env
+```
+
+(On Windows Command Prompt, use `copy backend\.env.example backend\.env`.)
+
+#### Step 4: Fill in the environment variables
+
+Open `backend/.env` and set at least these two values:
+
+- `DATABASE`: your MongoDB connection string from Step 2
+
+  `DATABASE="mongodb+srv://user:password@cluster0.xxxxx.mongodb.net/idurar"`
+
+- `JWT_SECRET`: any long random string. It signs login tokens, and logging in will fail without it.
+
+  `JWT_SECRET="replace-with-a-long-random-string"`
+
+The other variables in the file are optional. `RESEND_API` enables email sending, `OPENAI_API_KEY` enables AI features, and the `DO_SPACES_*` variables enable cloud file storage.
+
+#### Step 5: Install backend dependencies
+
+In your terminal, go to the `backend` directory:
 
 ```bash
 cd backend
 ```
 
-the urn the following command to install the backend dependencies:
+then run the following command to install the backend dependencies:
 
 ```bash
 npm install
 ```
 
-This command will install all the required packages specified in the package.json file.
+#### Step 6: Run the setup script
 
-#### Step 6: Run Setup Script
-
-While still in the /backend directory of the project, execute the following command to run the setup script:
+While still in the `backend` directory, run:
 
 ```bash
 npm run setup
 ```
 
-This setup script may perform necessary database migrations or any other initialization tasks required for the project.
+This creates the default admin account and the application settings in your database. When it finishes you should see `🥳 Setup completed :Success!`.
 
-#### Step 7: Run the Backend Server
+The setup only needs to run once. To wipe the admin account and settings and start over, run `npm run reset` and then `npm run setup` again.
 
-In the same terminal, run the following command to start the backend server:
+#### Step 7: Run the backend server
+
+In the same terminal, start the backend:
 
 ```bash
 npm run dev
 ```
 
-This command will start the backend server, and it will listen for incoming requests.
+The backend listens on **http://localhost:8888** (change it with `PORT` in `.env`). You should see `✅ MongoDB connected` followed by `Express running → On PORT : 8888`.
 
-#### Step 8: Install Frontend Dependencies
+#### Step 8: Install frontend dependencies
 
-Open a new terminal window , and run the following command to install the frontend dependencies:
+Open a **new terminal** window at the root of the repository and run:
+
+```bash
+cd frontend
+```
+
+Create the frontend environment file from the example (the defaults work for local development):
+
+```bash
+cp .env.example .env
+```
+
+(On Windows Command Prompt, use `copy .env.example .env`.)
+
+```bash
+npm install
+```
+
+#### Step 9: Run the frontend server
+
+```bash
+npm run dev
+```
+
+Open **http://localhost:3000** in your browser. The frontend's dev server forwards `/api` requests to the backend on port 8888, so keep both terminals running.
+
+#### Step 10: Log in
+
+Sign in with the default admin account created by the setup script:
+
+- **Email:** `admin@admin.com`
+- **Password:** `admin123`
+
+:warning: Change this password right after your first login, especially on any server reachable from the internet.
+
+---
+
+### Frontend configuration (optional)
+
+The frontend reads its settings from `frontend/.env`, which you created from `frontend/.env.example` in Step 8:
+
+| Variable              | Purpose                                                      | Default                  |
+| --------------------- | ------------------------------------------------------------ | ------------------------ |
+| `VITE_BACKEND_SERVER` | URL of the backend API                                       | `http://localhost:8888/` |
+| `VITE_FILE_BASE_URL`  | Base URL for uploaded files and PDFs served by the backend   | `http://localhost:8888/` |
+
+To run the frontend against a **remote** backend instead of a local one, set `VITE_BACKEND_SERVER` to that server's URL (see `frontend/temp.env` for an example), then start the frontend with:
+
+```bash
+npm run dev:remote
+```
+
+---
+
+### Running in production
+
+Build the frontend:
 
 ```bash
 cd frontend
 ```
 
 ```bash
-npm install
+npm run build
 ```
 
-#### Step 9: Run the Frontend Server
+The production files are written to `frontend/dist`; serve them with any static web server. Before building, set `VITE_BACKEND_SERVER` to your production backend URL.
 
-After installing the frontend dependencies, run the following command in the same terminal to start the frontend server:
+Start the backend (with `NODE_ENV="production"` set in `backend/.env`):
 
 ```bash
-npm run dev
+cd backend
 ```
 
-This command will start the frontend server, and you'll be able to access the website on localhost:3000 in your web browser.
+```bash
+npm start
+```
 
-:exclamation: :warning:` If you encounter an OpenSSL error while running the frontend server, follow these additional steps:`
+---
 
-Reason behind error: This is caused by the node.js V17 compatible issues with OpenSSL, see [this](https://github.com/nodejs/node/issues/40547) and [this](https://github.com/webpack/webpack/issues/14532) issue on GitHub.
+### Troubleshooting
 
+**`MongooseServerSelectionError` or the backend cannot connect to the database**
 
-Try one of these and error will be solved
+- Check that `DATABASE` in `backend/.env` is correct and the password contains no unescaped special characters.
+- For Atlas, make sure your current IP address is in the cluster's IP access list.
 
-- > upgrade to Node.js v20.
+**Login fails with a token or `secretOrPrivateKey` error**
 
-- > Enable legacy OpenSSL provider
+- `JWT_SECRET` is missing from `backend/.env`. Add it and restart the backend.
 
-Here is how you can enable legacy OpenSSL provider
+**`npm run setup` reports "Setup already done"**
 
-- On Unix-like (Linux, macOS, Git bash, etc.)
+- The database has already been set up. Run `npm run reset`, then `npm run setup` again.
+
+**OpenSSL error (`ERR_OSSL_EVP_UNSUPPORTED` / `digital envelope routines::unsupported`)**
+
+This only happens on older Node.js versions or legacy tooling. Upgrade to Node.js 20 first. If the error persists, enable the legacy OpenSSL provider and run `npm run dev` again:
+
+- On Unix-like systems (Linux, macOS, Git Bash):
 
 ```bash
 export NODE_OPTIONS=--openssl-legacy-provider
 ```
 
-- On Windows command prompt:
+- On Windows Command Prompt:
 
 ```bash
 set NODE_OPTIONS=--openssl-legacy-provider
@@ -117,16 +218,6 @@ set NODE_OPTIONS=--openssl-legacy-provider
 
 - On PowerShell:
 
-```bash
+```powershell
 $env:NODE_OPTIONS = "--openssl-legacy-provider"
 ```
-
-Here is [reference](https://github.com/webpack/webpack/issues/14532#issuecomment-947012063) about enabling legacy OpenSSL provider
-
-After trying above solutions, run below command
-
-```bash
-npm run dev
-```
-
-> If you still facing issue, then follow [this stackoverflow thread](https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported). It has so many different types of opinions. You definitely have solution after going through the thread.
