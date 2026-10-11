@@ -43,7 +43,7 @@ const resetPassword = async (req, res, { userModel }) => {
     resetToken: Joi.string().required(),
   });
 
-  const { error, value } = objectSchema.validate({ password, userId, resetToken });
+  const { error } = objectSchema.validate({ password, userId, resetToken });
   if (error) {
     return res.status(409).json({
       success: false,
