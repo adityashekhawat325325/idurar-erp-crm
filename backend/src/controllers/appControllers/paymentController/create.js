@@ -29,7 +29,7 @@ const create = async (req, res) => {
 
   const maxAmount = calculate.sub(calculate.sub(previousTotal, previousDiscount), previousCredit);
 
-  if (req.body.amount > maxAmount) {
+  if (req.body.amount > previousTotal) {
     return res.status(202).json({
       success: false,
       result: null,

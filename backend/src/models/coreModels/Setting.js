@@ -37,4 +37,6 @@ const settingSchema = new mongoose.Schema({
   },
 });
 
+settingSchema.index({ settingKey: 1 }, { unique: true });
+
 module.exports = mongoose.model('Setting', settingSchema);
