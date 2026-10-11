@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const { generate: uniqueId } = require('shortid');
+const { clearAuthCache } = require('@/cache');
 
 const updateProfilePassword = async (userModel, req, res) => {
   const UserPassword = mongoose.model(userModel + 'Password');
@@ -27,9 +28,14 @@ const updateProfilePassword = async (userModel, req, res) => {
 
   const passwordHash = bcrypt.hashSync(salt + password);
 
+  // keep the session making this request, sign out every other one
+  const authHeader = req.headers['authorization'];
+  const currentToken = authHeader && authHeader.split(' ')[1];
+
   const UserPasswordData = {
     password: passwordHash,
     salt: salt,
+    loggedSessions: currentToken ? [currentToken] : [],
   };
 
   if (userProfile.email === 'admin@admin.com') {
@@ -46,6 +52,7 @@ const updateProfilePassword = async (userModel, req, res) => {
       new: true, // return the new result instead of the old one
     }
   ).exec();
+  clearAuthCache(userProfile._id);
 
   if (!resultPassword) {
     return res.status(403).json({
