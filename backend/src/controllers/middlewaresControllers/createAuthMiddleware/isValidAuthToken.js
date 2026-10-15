@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const mongoose = require('mongoose');
+const { authCache, authCacheKey } = require('@/cache');
 
 const isValidAuthToken = async (req, res, next, { userModel, jwtSecret = 'JWT_SECRET' }) => {
   try {
@@ -29,22 +30,33 @@ const isValidAuthToken = async (req, res, next, { userModel, jwtSecret = 'JWT_SE
         jwtExpired: true,
       });
 
-    const userPasswordPromise = UserPassword.findOne({ user: verified.id, removed: false });
-    const userPromise = User.findOne({ _id: verified.id, removed: false });
+    const cacheKey = authCacheKey(verified.id);
+    let session = authCache.get(cacheKey);
 
-    const [user, userPassword] = await Promise.all([userPromise, userPasswordPromise]);
+    if (!session) {
+      const userPasswordPromise = UserPassword.findOne(
+        { user: verified.id, removed: false },
+        { loggedSessions: 1 }
+      ).lean();
+      const userPromise = User.findOne({ _id: verified.id, removed: false });
 
-    if (!user)
-      return res.status(401).json({
-        success: false,
-        result: null,
-        message: "User doens't Exist, authorization denied.",
-        jwtExpired: true,
-      });
+      const [user, userPassword] = await Promise.all([userPromise, userPasswordPromise]);
 
-    const { loggedSessions } = userPassword;
+      if (!user || !userPassword)
+        return res.status(401).json({
+          success: false,
+          result: null,
+          message: "User doens't Exist, authorization denied.",
+          jwtExpired: true,
+        });
 
-    if (!loggedSessions.includes(token))
+      session = { user, loggedSessions: new Set(userPassword.loggedSessions) };
+      authCache.set(cacheKey, session);
+    }
+
+    const { user, loggedSessions } = session;
+
+    if (!loggedSessions.has(token))
       return res.status(401).json({
         success: false,
         result: null,

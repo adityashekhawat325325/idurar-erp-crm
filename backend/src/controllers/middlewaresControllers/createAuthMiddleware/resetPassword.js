@@ -4,6 +4,7 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 
 const shortid = require('shortid');
+const { clearAuthCache } = require('@/cache');
 
 const resetPassword = async (req, res, { userModel }) => {
   const UserPassword = mongoose.model(userModel + 'Password');
@@ -42,7 +43,7 @@ const resetPassword = async (req, res, { userModel }) => {
     resetToken: Joi.string().required(),
   });
 
-  const { error, value } = objectSchema.validate({ password, userId, resetToken });
+  const { error } = objectSchema.validate({ password, userId, resetToken });
   if (error) {
     return res.status(409).json({
       success: false,
@@ -68,7 +69,8 @@ const resetPassword = async (req, res, { userModel }) => {
   await UserPassword.findOneAndUpdate(
     { user: userId },
     {
-      $push: { loggedSessions: token },
+      // revoke every session issued before the reset, keep only the new one
+      loggedSessions: [token],
       password: hashedPassword,
       salt: salt,
       emailToken: emailToken,
@@ -79,6 +81,7 @@ const resetPassword = async (req, res, { userModel }) => {
       new: true,
     }
   ).exec();
+  clearAuthCache(userId);
 
   if (
     resetToken === databasePassword.resetToken &&

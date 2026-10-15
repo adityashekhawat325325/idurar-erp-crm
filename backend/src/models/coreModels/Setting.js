@@ -39,4 +39,23 @@ const settingSchema = new mongoose.Schema({
 
 settingSchema.index({ settingKey: 1 }, { unique: true });
 
+// keep the cached settings in sync with writes that go through the model
+// (bulkWrite has no hooks, callers must clear the cache themselves)
+const { clearSettingsCache } = require('../../cache');
+
+settingSchema.post(['save', 'insertMany'], clearSettingsCache);
+settingSchema.post(
+  [
+    'findOneAndUpdate',
+    'findOneAndReplace',
+    'findOneAndDelete',
+    'updateOne',
+    'updateMany',
+    'replaceOne',
+    'deleteOne',
+    'deleteMany',
+  ],
+  clearSettingsCache
+);
+
 module.exports = mongoose.model('Setting', settingSchema);

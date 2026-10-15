@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { generate: uniqueId } = require('shortid');
+const { clearAuthCache } = require('@/cache');
 
 const updatePassword = async (userModel, req, res) => {
   const UserPassword = mongoose.model(userModel + 'Password');
@@ -29,9 +30,15 @@ const updatePassword = async (userModel, req, res) => {
 
   const passwordHash = bcrypt.hashSync(salt + password);
 
+  // sign out every session of that user, except the requester's own when changing their own password
+  const authHeader = req.headers['authorization'];
+  const currentToken = authHeader && authHeader.split(' ')[1];
+  const isSelf = userProfile._id.toString() === req.params.id;
+
   const UserPasswordData = {
     password: passwordHash,
     salt: salt,
+    loggedSessions: isSelf && currentToken ? [currentToken] : [],
   };
 
   const resultPassword = await UserPassword.findOneAndUpdate(
@@ -41,6 +48,7 @@ const updatePassword = async (userModel, req, res) => {
       new: true, // return the new result instead of the old one
     }
   ).exec();
+  clearAuthCache(req.params.id);
 
   // Code to handle the successful response
 

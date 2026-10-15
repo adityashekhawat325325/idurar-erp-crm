@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { clearAuthCache } = require('@/cache');
 
 const updateProfile = async (userModel, req, res) => {
   const User = mongoose.model(userModel);
@@ -38,6 +39,7 @@ const updateProfile = async (userModel, req, res) => {
       new: true, // return the new result instead of the old one
     }
   ).exec();
+  clearAuthCache(userProfile._id);
 
   if (!result) {
     return res.status(404).json({

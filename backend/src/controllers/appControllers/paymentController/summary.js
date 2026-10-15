@@ -1,15 +1,11 @@
 const mongoose = require('mongoose');
-const moment = require('moment');
 
 const Model = mongoose.model('Payment');
-const { loadSettings } = require('@/middlewares/settings');
 
 const summary = async (req, res) => {
   let defaultType = 'month';
 
   const { type } = req.query;
-
-  const settings = await loadSettings();
 
   if (type) {
     if (['week', 'month', 'year'].includes(type)) {
@@ -23,20 +19,11 @@ const summary = async (req, res) => {
     }
   }
 
-  const currentDate = moment();
-  let startDate = currentDate.clone().startOf(defaultType);
-  let endDate = currentDate.clone().endOf(defaultType);
-
   // get total amount of invoices
   const result = await Model.aggregate([
     {
       $match: {
         removed: false,
-
-        // date: {
-        //   $gte: startDate.toDate(),
-        //   $lte: endDate.toDate(),
-        // },
       },
     },
     {

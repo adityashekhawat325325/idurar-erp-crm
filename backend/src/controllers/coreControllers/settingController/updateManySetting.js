@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { clearSettingsCache } = require('@/cache');
 
 const Model = mongoose.model('Setting');
 
@@ -39,6 +40,8 @@ const updateManySetting = async (req, res) => {
     });
   }
   const result = await Model.bulkWrite(updateDataArray);
+  // bulkWrite doesn't trigger the Setting model hooks
+  clearSettingsCache();
 
   if (!result || result.nMatched < 1) {
     return res.status(404).json({

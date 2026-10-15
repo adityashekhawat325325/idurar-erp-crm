@@ -32,7 +32,7 @@ const invoiceSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Client',
     required: true,
-    autopopulate: true,
+    autopopulate: { select: 'name email phone address country' },
   },
   converted: {
     from: {

@@ -1,5 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { clearAuthCache } = require('@/cache');
+const { MAX_SESSIONS } = require('./constants');
 
 const authUser = async (req, res, { user, databasePassword, password, UserPasswordModel }) => {
   const isMatch = await bcrypt.compare(databasePassword.salt + password, databasePassword.password);
@@ -22,11 +24,12 @@ const authUser = async (req, res, { user, databasePassword, password, UserPasswo
 
     await UserPasswordModel.findOneAndUpdate(
       { user: user._id },
-      { $push: { loggedSessions: token } },
+      { $push: { loggedSessions: { $each: [token], $slice: -MAX_SESSIONS } } },
       {
         new: true,
       }
     ).exec();
+    clearAuthCache(user._id);
 
     // .cookie(`token_${user.cloud}`, token, {
     //     maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : null,
